@@ -59,3 +59,7 @@ class DebounceLiveData<T>(source: LiveData<T>, duration: Long) : MediatorLiveDat
         }
     }
 }
+
+internal fun <T> LiveData<Event<T>>.eventObserver(owner: LifecycleOwner, event: (T) -> Unit) {
+    observe(owner, EventObserver(event))
+}
