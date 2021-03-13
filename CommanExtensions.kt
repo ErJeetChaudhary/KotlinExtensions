@@ -1,0 +1,59 @@
+inline fun <reified T> Gson.fromJson(value: String?): T {
+    return this.fromJson(value, T::class.java)
+}
+
+val Any.TAG: String
+    get() = javaClass.simpleName
+
+/**
+ * This method converts dp unit to equivalent pixels, depending on device density.
+ *
+ * A value in dp (density independent pixels) unit. Which we need to convert into pixels
+ * @return A float value to represent px equivalent to dp depending on device density
+ */
+internal fun Float.convertDpToPixel(): Float {
+    return this * (TUK.instance.resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT)
+}
+
+/**
+ * This method converts device specific pixels to density independent pixels.
+ *
+ * A value in px (pixels) unit. Which we need to convert into db
+ * @return A float value to represent dp equivalent to px value
+ */
+internal fun Float.convertPixelsToDp(): Float {
+    return this / (TUK.instance.resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT)
+}
+
+internal fun Fragment.getFont(@FontRes id: Int): Typeface {
+    return ResourcesCompat.getFont(requireContext(), id)!!
+}
+
+internal fun Context.getFont(@FontRes id: Int): Typeface {
+    return ResourcesCompat.getFont(this, id)!!
+}
+
+internal fun <T> Flow<T>.flowIO(): Flow<T> {
+    return flowOn(Dispatchers.IO)
+}
+
+inline fun <reified T> Moshi.convert(value: String): T? {
+    return adapter(T::class.java).fromJson(value)
+}
+
+internal fun String?.fromHtml(): String {
+    return when {
+        this == null -> {
+            // return an empty spannable if the html is null
+            SpannableString("").toString()
+        }
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.N -> {
+            // FROM_HTML_MODE_LEGACY is the behaviour that was used for versions below android N
+            // we are using this flag to give a consistent behaviour
+            Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY).toString()
+        }
+        else -> {
+            Html.fromHtml(this).toString()
+        }
+    }
+}
