@@ -45,3 +45,17 @@ class LiveEvent<T> : MutableLiveData<T>() {
     @MainThread
     fun clear() = super.setValue(null)
 }
+
+class DebounceLiveData<T>(source: LiveData<T>, duration: Long) : MediatorLiveData<T>() {
+
+    private val handler = Handler()
+
+    private val runnable = Runnable { this@DebounceLiveData.postValue(source.value) }
+
+    init {
+        addSource(source) {
+            handler.removeCallbacks(runnable)
+            handler.postDelayed(runnable, duration)
+        }
+    }
+}
