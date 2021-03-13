@@ -57,3 +57,18 @@ internal fun String?.fromHtml(): String {
         }
     }
 }
+
+private fun clearCache() {
+    GlobalScope.launch(Dispatchers.IO) {
+        Logger.wtf(TAG, "cache isMainThread: ${Looper.getMainLooper() == Looper.myLooper()}")
+        try {
+            val iterator = mCache.urls()
+            while (iterator.hasNext()) {
+                iterator.next()
+                iterator.remove()
+            }
+        } catch (e: Exception) {
+            Logger.wtf(TAG, "exception while clear cache $e")
+        }
+    }
+}
