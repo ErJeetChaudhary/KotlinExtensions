@@ -223,3 +223,112 @@ inline fun Animation.addOnAnimationListener(
     setAnimationListener(listener)
     return listener
 }
+
+internal fun Activity.doOnInternet(action: () -> Unit = { }) {
+    if (this.hasInternet()) {
+        action()
+    } else {
+        Snackbar.make(
+            this.findViewById(android.R.id.content),
+            "Error while connecting to server. Please check internet connection.",
+            Snackbar.LENGTH_LONG
+        ).setAction("OK") {
+
+        }.setActionTextColor(ContextCompat.getColor(this, R.color.green_whts)).show()
+    }
+}
+
+internal fun Fragment.doOnInternet(action: () -> Unit = { }) {
+    this.activity?.let {
+        if (it.hasInternet()) {
+            action()
+        } else {
+            Snackbar.make(
+                it.findViewById(android.R.id.content),
+                "Error while connecting to server. Please check internet connection.",
+                Snackbar.LENGTH_LONG
+            )
+                .setAction("OK") {}
+                .setActionTextColor(ContextCompat.getColor(it, R.color.green_whts))
+                .show()
+        }
+    }
+}
+
+internal fun Long.formatDateTime(format: String): String = SimpleDateFormat(format, Locale.getDefault()).format(Timestamp(this))
+
+inline fun <reified T> Gson.fromJson(value: String?): T {
+    return this.fromJson(value, T::class.java)
+}
+
+inline fun <reified T> Gson.toJsonString(value: T?): String? {
+    return this.toJson(value, T::class.java)
+}
+
+inline fun View.doOnScrollChanged(crossinline action: (view: View) -> Unit) {
+    this.viewTreeObserver.addOnScrollChangedListener {
+        action(this)
+    }
+}
+
+inline fun Activity.takeScreenshot(crossinline result: (bitmap: Bitmap) -> Unit) {
+    this.window?.let { window ->
+        val view = window.decorView.rootView
+        val bitmap = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val locationOfViewInWindow = IntArray(2)
+            view.getLocationInWindow(locationOfViewInWindow)
+            try {
+                PixelCopy.request(
+                    window, Rect(
+                        locationOfViewInWindow[0], locationOfViewInWindow[1],
+                        locationOfViewInWindow[0] + view.width, locationOfViewInWindow[1] + view.height
+                    ), bitmap, { copyResult ->
+                        if (copyResult == PixelCopy.SUCCESS) {
+                            result(bitmap)
+                        } else {
+                            view.draw(Canvas(bitmap))
+                            result(bitmap)
+                        }
+                    }, Handler()
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+                view.draw(Canvas(bitmap))
+                result(bitmap)
+            }
+        } else {
+            view.draw(Canvas(bitmap))
+            result(bitmap)
+        }
+    }
+}
+
+internal fun Activity.openCamera(requestCode: Int, output: File) {
+    if (EasyPermissions.hasPermissions(this, Manifest.permission.CAMERA)) {
+        this.startActivityForResult(Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+            putExtra(MediaStore.EXTRA_OUTPUT, FileProvider.getUriForFile(this@openCamera, "${packageName}.provider", output))
+        }, requestCode)
+    } else {
+        EasyPermissions.requestPermissions(
+            PermissionRequest.Builder(this, requestCode, Manifest.permission.CAMERA)
+                .setRationale(R.string.rationale_camera)
+                .setPositiveButtonText(R.string.ok)
+                .setNegativeButtonText(R.string.cancel)
+                .build()
+        )
+    }
+}
+
+internal fun Activity.hasSoftKeys(): Boolean {
+    val d: Display = windowManager.defaultDisplay
+    val realDisplayMetrics = DisplayMetrics()
+    d.getRealMetrics(realDisplayMetrics)
+    val realHeight = realDisplayMetrics.heightPixels
+    val realWidth = realDisplayMetrics.widthPixels
+    val displayMetrics = DisplayMetrics()
+    d.getMetrics(displayMetrics)
+    val displayHeight = displayMetrics.heightPixels
+    val displayWidth = displayMetrics.widthPixels
+    return realWidth - displayWidth > 0 || realHeight - displayHeight > 0
+}
