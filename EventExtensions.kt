@@ -33,3 +33,7 @@ open class Event<out T>(private val content: T) {
     fun peekContent(): T = content
 
 }
+
+internal fun <T> LiveData<Event<T>>.eventObserver(owner: LifecycleOwner, event: (T) -> Unit) {
+    observe(owner, EventObserver(event))
+}
