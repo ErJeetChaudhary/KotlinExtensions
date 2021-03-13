@@ -72,3 +72,9 @@ private fun clearCache() {
         }
     }
 }
+
+internal fun Spinner.setEntries(@ArrayRes arrayId: Int) {
+    adapter = ArrayAdapter.createFromResource(context, arrayId, android.R.layout.simple_spinner_item).apply {
+        setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+    }
+}
