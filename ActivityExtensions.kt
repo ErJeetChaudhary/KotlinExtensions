@@ -80,3 +80,4 @@ inline fun <reified T : Any> Context.launchActivity(options: Bundle? = null, fin
     }
 }
 
+inline fun <reified T> Context.getService() = ContextCompat.getSystemService(this, T::class.java)
